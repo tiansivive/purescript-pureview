@@ -1,0 +1,13 @@
+{
+  "name": "vdom",
+  "version": "1.0.0",
+  "description": "",
+  "author": "",
+  "scripts": {
+    "serve": "parcel www/index.html --open",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "devDependencies": {
+    "parcel": "^1.12.4"
+  }
+}
