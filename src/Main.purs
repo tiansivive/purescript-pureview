@@ -60,7 +60,3 @@ main = do
   log "done"
   
 
-
--- test :: Array Int -> Array Int -> Array (Array Int)
--- test old new = do
---   o <- old

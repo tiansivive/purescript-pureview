@@ -89,7 +89,7 @@ diffAttrs old new =
         additions = map (patch setAttr) new
         deletions = map (patch removeAttr) $ difference old new
     in 
-        sequence_ <<< flap (additions <> deletions)  
+        sequence_ <<< flap (deletions <> additions)
     where 
         patch action attr node = case fromNode node of
             Just el -> action el attr
