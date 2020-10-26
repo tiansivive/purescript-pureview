@@ -40,10 +40,10 @@ instance showAttr :: Show Attribute where
     show (Attr key val) = key <> " = " <> val 
 
 instance showVNode :: Show (VNode a) where
+    show (VTextNode text) = "\n{ VTextNode: " <> text <> " }\n"
     show (VNode { tag, props, children }) = "\n{\n\tVNode: " <> tag 
                                 <> "\n\tProps: " <> show props
                                 <> "\n\tChildren: " <> show children <> "\n}\n"
-    show (VTextNode text) = "\n{ VTextNode: " <> text <> " }\n"
 
 
 
@@ -53,7 +53,6 @@ instance eqAttribute :: Eq Attribute where
 
 mount :: forall a. VNode a -> Element -> Effect Node  
 mount app root = render app >>= appendTo root
-
 
 
 render :: forall a. VNode a -> Effect Node
@@ -83,6 +82,7 @@ diff (Just o@(VNode old)) (Just n@(VNode new))
 
 diff _ (Just new) = appendNewNode new
 
+
 diffAttrs :: Props -> Props -> Node -> Effect Unit
 diffAttrs old new =
     let 
@@ -97,10 +97,7 @@ diffAttrs old new =
 
 
 
-
-
-
-
+-- UTILITIES --
 
 createElement :: forall a. String -> Props -> Children a -> VNode a
 createElement tag props children = VNode
