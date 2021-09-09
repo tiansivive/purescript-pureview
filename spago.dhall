@@ -4,7 +4,20 @@ You can edit this file as you like.
 -}
 { name = "my-project"
 , dependencies =
-  [ "console", "debug", "effect", "psci-support", "web-dom", "web-html" ]
+  [ "arrays"
+  , "console"
+  , "debug"
+  , "effect"
+  , "foldable-traversable"
+  , "maybe"
+  , "prelude"
+  , "psci-support"
+  , "strings"
+  , "tuples"
+  , "web-dom"
+  , "web-events"
+  , "web-html"
+  ]
 , packages = ./packages.dhall
 , sources = [ "src/**/*.purs", "test/**/*.purs" ]
 }

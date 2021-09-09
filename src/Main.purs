@@ -1,18 +1,16 @@
 module Main where
 
 
-import Data.Maybe
-import Prelude
-
-import Control.Apply (void)
-import Data.String (Pattern(..), split)
+import Component as PV
+import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Class.Console (log)
-import Prelude (Unit, bind, map, ($), (>>=), (>>>))
+import HTML as HTML
+import Prelude (Unit, bind, pure, show, unit, void, ($), (+), (-), (>>=))
 import VDOM as V
 import Web.DOM.Document as D
 import Web.DOM.Element as E
-import Web.DOM.Node (Node, appendChild)
+import Web.DOM.Node (appendChild)
 import Web.DOM.NonElementParentNode (getElementById)
 import Web.DOM.Text (toNode) as T
 import Web.HTML (HTMLDocument, window)
@@ -21,49 +19,45 @@ import Web.HTML.Window (document)
 
 
 
-data State = St {
-  text:: String,
-  value:: Int
-}
-
-data Action = NewText String | NewVal Int
-
-type Props = { state:: State, dispatch:: Action -> Effect Unit }
 
 
-initState :: State
-initState = St { text: "some stuff eh?", value: 0}
 
-dispatch:: State -> Action -> State
-dispatch (St prev) (NewText str) = St $ prev { text = str }
-dispatch (St prev) (NewVal v) = St $ prev { value = v }
-
-
-vApp :: forall a. V.VNode a
+vApp :: forall a. V.VirtualNode a
 vApp = V.createElement "div" [V.Attr "id" "vApp"] 
     [ V.createElement "span" [] 
-      [ V.VTextNode "some text "]
+      [ V.Text "some text "]
     , V.createElement "hr" [] []
     , V.createElement "img" [V.Attr "src" "https://media.giphy.com/media/cuPm4p4pClZVC/giphy.gif"] []
     ] 
 
+data Actions = Increment | Decrement
+counter :: forall p l e. PV.Component p Int Actions e l
+counter = PV.C {
+  initialState: \_ -> 0,
+  handlers: [],
+  update,
+  render
+} 
+  where
+    update Increment = (+) 1
+    update Decrement = (-) 1
 
-component :: forall a. Props -> V.VNode a
-component {state, dispatch } = V.createElement "div" [V.Attr "id" "vApp2"] children 
-    where
-      (St st) = state
-      words = split (Pattern " ") st.text
-      children = map (\word -> V.createElement "p" [] [ V.VTextNode word ]) words
+    --render :: p -> Int -> PV.Handlers e -> V.VirtualNode l
+    render _ n _ =
+      HTML.div [V.Attr "class" "counter"] [
+        HTML.button [V.Handler "on-click" $ Increment] [V.Text "+1"]
+        HTML.button [V.Handler "on-click" $ Decrement] [V.Text "-1"]
+        HTML.span [] [V.Text $ show n]
+      ]
 
 
 
 
-run :: forall a. Node -> V.VNode a -> State -> Effect Unit
-run node prev state = do
-  let updater = run node prev <<< dispatch state
-  let app = component { state: initState, dispatch: updater }
-  V.diff (Just prev) (Just app) node
-  
+componentApp :: forall a. V.VirtualNode a
+componentApp = 
+  HTML.div [HTML.Attr "id" "root"] [
+    PV.view counter [] [] 
+  ]
 
 
 main :: Effect Unit
@@ -78,18 +72,18 @@ main = do
       -- void $ V.mount vApp root
       -- node <- V.mount vApp root
       -- V.diff (Just vApp) (Just up) node
-      _ <- V.mount vApp root
+      _ <- V.mount componentApp root
       pure unit
     Nothing -> void $ noRootElemError doc
 
   log "done"
   
 
-noRootElemError :: HTMLDocument -> Effect Node
+noRootElemError :: HTMLDocument -> Effect Unit
 noRootElemError doc = do
     let d = toDocument doc
     el <- D.createElement "span" d
     text <- D.createTextNode "Could not find root element" d
     appendChild (T.toNode text) (E.toNode el)
-    -- appendChild (E.toNode el) (D.toNode d)
+
     

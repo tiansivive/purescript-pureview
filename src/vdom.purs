@@ -21,43 +21,48 @@ import Web.HTML.HTMLDocument (toDocument)
 import Web.HTML.Window (document)
 
 
-type Props = Array Attribute
+type Props a = Array (Attribute a)
 type EventListener a = Event -> Effect a
-type Children a = Array (VNode a)
+type Children a = Array (VirtualNode a)
 
 
-data Attribute = Attr String String
-data VNode a = VNode 
+data Attribute a = 
+    Attr String String
+    | Handler String a
+
+data VirtualNode a = Element 
     { tag :: String
-    , props :: Props
+    , props :: Props a
     , listeners :: Array (EventListener a)
-    , children :: Array (VNode a)
+    , children :: Array (VirtualNode a)
     } 
-    | VTextNode String
+    | Text String
 
 
-instance showAttr :: Show Attribute where
+
+instance showAttr :: Show a => Show (Attribute a) where
     show (Attr key val) = key <> " = " <> val 
+    show (Handler key val) = key <> " = " <> show val
 
-instance showVNode :: Show (VNode a) where
-    show (VTextNode text) = "\n{ VTextNode: " <> text <> " }\n"
-    show (VNode { tag, props, children }) = "\n{\n\tVNode: " <> tag 
+instance showVirtualNode :: Show (VirtualNode a) where
+    show (Text text) = "\n{ Text: " <> text <> " }\n"
+    show (Element  { tag, props, children }) = "\n{\n\tElement : " <> tag 
                                 <> "\n\tProps: " <> show props
                                 <> "\n\tChildren: " <> show children <> "\n}\n"
 
 
 
-instance eqAttribute :: Eq Attribute where
+instance eqAttribute :: Eq (Attribute a) where
     eq (Attr a1 b1) (Attr a2 b2) = a1 == a2 && b1 == b2 
 
 
-mount :: forall a. VNode a -> Element -> Effect Node  
+mount :: forall a. VirtualNode a -> Element -> Effect Unit  
 mount app root = render app >>= appendTo root
 
 
-render :: forall a. VNode a -> Effect Node
-render (VTextNode text) = toTextNode text
-render n@(VNode { tag, props, children }) = do
+render :: forall a. VirtualNode a -> Effect Node
+render (Text text) = toTextNode text
+render (Element  { tag, props, children }) = do
     el <- toElement tag
 
     traverse_ (setAttr el) props
@@ -66,13 +71,13 @@ render n@(VNode { tag, props, children }) = do
     pure $ toNode el
   
 
-diff :: forall a. Maybe (VNode a) -> Maybe (VNode a) -> Node -> Effect Unit
+diff :: forall a. Maybe (VirtualNode a) -> Maybe (VirtualNode a) -> Node -> Effect Unit
 diff _ Nothing = removeNode
-diff (Just (VTextNode oldText)) (Just new@(VTextNode newText))
+diff (Just (Text oldText)) (Just new@(Text newText))
     | oldText == newText = pure >>> void
     | otherwise = replaceWith new
 
-diff (Just o@(VNode old)) (Just n@(VNode new))  
+diff (Just (Element  old)) (Just n@(Element  new))  
     | old.tag /= new.tag = replaceWith n
     | otherwise = \node -> do
         let (Tuple oldChildren newChildren) = normalizeLength old.children new.children     
@@ -99,8 +104,8 @@ diffAttrs old new =
 
 -- UTILITIES --
 
-createElement :: forall a. String -> Props -> Children a -> VNode a
-createElement tag props children = VNode
+createElement :: forall a. String -> Props -> Children a -> VirtualNode a
+createElement tag props children = Element 
     { tag
     , props
     , children
@@ -122,7 +127,7 @@ setAttr el (Attr key val) = setAttribute key val el
 removeAttr :: Element -> Attribute -> Effect Unit
 removeAttr el (Attr key _) = removeAttribute key el
 
-appendTo :: Element -> Node -> Effect Node
+appendTo :: Element -> Node -> Effect Unit
 appendTo = flip appendChild <<< toNode
 
 removeNode :: Node -> Effect Unit
@@ -130,12 +135,12 @@ removeNode = fromNode >>> case _ of
     Nothing -> pure unit
     Just el -> remove $ toChildNode el 
 
-appendNewNode :: forall a. VNode a -> Node -> Effect Unit
+appendNewNode :: forall a. VirtualNode a -> Node -> Effect Unit
 appendNewNode vChild parent = void do
     child <- render vChild
     appendChild child parent
 
-replaceWith :: forall a. VNode a -> Node -> Effect Unit
+replaceWith :: forall a. VirtualNode a -> Node -> Effect Unit
 replaceWith new old = do
     newNode <- render new
     parent <- parentNode old
