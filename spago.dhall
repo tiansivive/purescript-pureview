@@ -9,6 +9,7 @@ You can edit this file as you like.
   , "debug"
   , "effect"
   , "foldable-traversable"
+  , "foreign-object"
   , "maybe"
   , "prelude"
   , "psci-support"

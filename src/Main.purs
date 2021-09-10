@@ -22,14 +22,6 @@ import Web.HTML.Window (document)
 
 
 
-vApp :: forall a. V.VirtualNode a
-vApp = V.createElement "div" [V.Attr "id" "vApp"] 
-    [ V.createElement "span" [] 
-      [ V.Text "some text "]
-    , V.createElement "hr" [] []
-    , V.createElement "img" [V.Attr "src" "https://media.giphy.com/media/cuPm4p4pClZVC/giphy.gif"] []
-    ] 
-
 data Actions = Increment | Decrement
 counter :: forall p l e. PV.Component p Int Actions e l
 counter = PV.C {
@@ -42,13 +34,24 @@ counter = PV.C {
     update Increment = (+) 1
     update Decrement = (-) 1
 
+    styles = {
+      backgroundColor: "grey",
+      fontSize: 400
+    }
+
     --render :: p -> Int -> PV.Handlers e -> V.VirtualNode l
     render _ n _ =
-      HTML.div [V.Attr "class" "counter"] [
-        HTML.button [V.Handler "on-click" $ Increment] [V.Text "+1"]
-        HTML.button [V.Handler "on-click" $ Decrement] [V.Text "-1"]
-        HTML.span [] [V.Text $ show n]
-      ]
+      HTML.div 
+        { id: "counter"
+        , classname: "counter"
+        , styles: ?css styles
+        } 
+        [ HTML.button {} [V.Text "+1"] ?with 
+          [ On "click" Increment
+          ]
+        , HTML.button {} [V.Text "-1"] ?with [On "click" Decrement]
+        , HTML.span {} [V.Text $ show n]
+        ]
 
 
 
