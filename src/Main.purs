@@ -6,7 +6,7 @@ import Data.Maybe (Maybe(..))
 import Effect (Effect)
 import Effect.Class.Console (log)
 import HTML as HTML
-import Prelude (Unit, bind, pure, show, unit, void, ($), (+), (-), (>>=))
+import Prelude (Unit, bind, const, pure, show, unit, void, ($), (+), (-), (>>=))
 import VDOM as V
 import Web.DOM.Document as D
 import Web.DOM.Element as E
@@ -25,8 +25,11 @@ import Web.HTML.Window (document)
 data Actions = Increment | Decrement
 counter :: forall p l e. PV.Component p Int Actions e l
 counter = PV.C {
-  initialState: \_ -> 0,
-  handlers: [],
+  initialState: const 0,
+  handlers: 
+    [ \props state evt -> Increment
+
+    ],
   update,
   render
 } 
@@ -41,15 +44,10 @@ counter = PV.C {
 
     --render :: p -> Int -> PV.Handlers e -> V.VirtualNode l
     render _ n _ =
-      HTML.div 
-        { id: "counter"
-        , classname: "counter"
-        , styles: ?css styles
-        } 
-        [ HTML.button {} [V.Text "+1"] ?with 
-          [ On "click" Increment
-          ]
-        , HTML.button {} [V.Text "-1"] ?with [On "click" Decrement]
+      HTML.div { id: "counter", classname: "counter", styles: ?css styles } 
+        [ HTML.button {} [ V.Text "+1" ] ?with [ On "click" Increment ]
+        , HTML.button {} [ V.Text "-1" ] ?with [ On "click" Decrement ]
+        , HTML.button {} [ V.Text "Submit"] ?with [ Perform "click" effect ]
         , HTML.span {} [V.Text $ show n]
         ]
 

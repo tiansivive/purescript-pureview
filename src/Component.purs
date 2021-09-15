@@ -1,23 +1,44 @@
 module Component where
 
-import VDOM as V
+import Effect.Class (class MonadEffect)
+
+import Prelude (pure, unit, map, discard)
+import VDOM2 as V
+import Web.Event.Event (EventType(..))
 
 type Handlers e = Array e
 
-data Dispatcher a = Dispatch a
 
-data Component p s a e l = C {
+
+data Component p s a e l v = C {
     initialState :: p -> s,
     handlers :: Handlers e,
     update :: a -> s -> s,
-    render :: p -> s -> Handlers e -> V.VirtualNode l
+    render :: p -> s -> Handlers e -> V.VirtualNode l v
 }
 
+data EventHandler :: Type -> (Type -> Type) -> Type
+data EventHandler a e
+    = On EventType a
+    | Perform EventType e
 
-view :: forall p s e a l. Component p s e a l -> V.Props -> V.Children l -> V.VirtualNode l
+
+
+with :: ∀ l v a e. MonadEffect e => V.VirtualNode l v → Array (EventHandler a e) → V.VirtualNode l v
+with n handlers = n
+    where 
+        toListener :: EventHandler a e -> V.EventListener l v
+        toListener (On (EventType eType) action) = V.On eType \v -> pure unit
+        toListener (Perform (EventType eType) eff) = V.On eType \v -> do 
+            eff
+            pure unit
+        listeners = map toListener handlers
+
+
+view :: forall p s e a l v. Component p s e a l v -> V.Attrs -> Array (V.VirtualNode l v) -> (V.VirtualNode l v)
 view cp p c = V.Element {
-    tag: "a",
-    props: p,
+    name: "a",
+    attrs: p,
     listeners: [],
     children: c
 }

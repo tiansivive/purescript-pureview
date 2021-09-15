@@ -1,20 +1,21 @@
 module HTML (module V, div, span, button) where
 
 
-import VDOM (Children, VirtualNode, Props, Attribute(..), createElement) as V
+import VDOM2 (VirtualNode, Attrs, h) as V
 
 
 -- data Attrs = NoAttrs | Attrs V.Attrs
 -- data Children 
 
 
-div :: forall a. V.Props -> V.Children a -> V.VirtualNode a
-div = V.createElement "div"
+
+div :: forall l v. V.Attrs -> Array (V.VirtualNode l v) -> V.VirtualNode l v
+div = V.h "div"
 
 
-span :: forall a. V.Props -> V.Children a -> V.VirtualNode a
-span = V.createElement "span"
+span :: forall l v. V.Attrs -> Array (V.VirtualNode l v) -> V.VirtualNode l v
+span = V.h "span"
 
 
-button :: forall a. V.Props -> V.Children a -> V.VirtualNode a
-button = V.createElement "button"
+button :: forall l v. V.Attrs -> Array (V.VirtualNode l v) -> V.VirtualNode l v
+button = V.h "button"
